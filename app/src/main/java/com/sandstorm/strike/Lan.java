@@ -190,6 +190,7 @@ public class Lan {
             status = "Подключение к " + ip + "...";
             socket = new Socket();
             socket.connect(new java.net.InetSocketAddress(ip, PORT), 4000);
+            socket.setTcpNoDelay(true);
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
             int type = in.readByte();
@@ -303,11 +304,15 @@ public class Lan {
         }
     }
 
+    private float inputClock = 0;
+
     private void updateClient(GameView g, float dt) {
         // локальный обзор — сразу, позиция — с сервера
         local.dir = g.player != null ? g.player.dir : local.dir;
         local.crouching = g.wantCrouch;
-        if (out != null) {
+        inputClock += dt;
+        if (out != null && inputClock >= 0.033f) {
+            inputClock = 0;
             try {
                 Input i = inputFromGame(g);
                 out.writeByte(3);

@@ -677,13 +677,20 @@ public class GameView extends View {
         return true;
     }
 
-    public boolean startLanJoin(String ip) {
+    public boolean startLanJoin(final String ip) {
         leaveLan();
-        lan = new Lan(world);
-        if (!lan.startClient(ip, "Player")) { lan=null; return false; }
+        final Lan l = new Lan(world);
+        lan = l;
         lanActive = true; screen = S_GAME;
-        player = lan.local;
+        player = l.local;
         joyX=0;joyY=0;firing=false;wantJump=false;wantCrouch=false;wantReload=false;wantPlant=false;
+        new Thread(() -> {
+            boolean ok;
+            try { ok = l.startClient(ip, "Player"); } catch (Throwable t) { ok = false; }
+            if (!ok) {
+                post(() -> { leaveLan(); screen = S_LAN; });
+            }
+        }, "lan-connect").start();
         return true;
     }
 
