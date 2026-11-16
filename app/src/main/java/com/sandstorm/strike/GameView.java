@@ -510,11 +510,32 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     void updateBomb(float dt) {
         if (bomb==null) return;
-        // CT defusing
-        if (bomb.state==1 && player.alive && player.team==Entities.TEAM_CT) {
-            float d=(float)Math.hypot(bomb.x-player.x,bomb.y-player.y);
-            if (d<1f && wantCrouch) {
-                bomb.defuseProgress+=dt;
+        // auto-plant by T bots if player is CT
+        if (bomb.state==0) {
+            for (Entities.Player b : bots) {
+                if (b.alive && b.team==Entities.TEAM_T && nearSite(b.x,b.y)) {
+                    bomb.state=1; bomb.x=b.x; bomb.y=b.y;
+                    bomb.site=nearSiteIndex(b.x,b.y); bomb.timer=40; roundState=1;
+                    roundMessage="Бомба заложена ботом!"; roundMessageT=2;
+                    break;
+                }
+            }
+        }
+        // defuse by CT player (crouch) or CT bots
+        if (bomb.state==1) {
+            float rate=0;
+            if (player.alive && player.team==Entities.TEAM_CT) {
+                float d=(float)Math.hypot(bomb.x-player.x,bomb.y-player.y);
+                if (d<1f && wantCrouch) rate+=1f;
+            }
+            for (Entities.Player b : bots) {
+                if (b.alive && b.team==Entities.TEAM_CT) {
+                    float d=(float)Math.hypot(bomb.x-b.x,bomb.y-b.y);
+                    if (d<1f) rate+=0.6f;
+                }
+            }
+            if (rate>0) {
+                bomb.defuseProgress+=rate*dt;
                 if (bomb.defuseProgress>=5f) { bomb.state=3; endRound(Entities.TEAM_CT,"Бомба обезврежена"); }
             } else bomb.defuseProgress=Math.max(0,bomb.defuseProgress-dt*2);
         }
@@ -544,8 +565,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     void endRound(int winner, String msg) {
         if (roundState==2) return;
         roundState=2; roundWinner=winner; endMessage=msg; endTimer=3.5f;
-        if (winner==player.team) { scoreT++; applyElo(true); }
-        else { scoreCT++; applyElo(false); }
+        if (winner==Entities.TEAM_T) scoreT++; else scoreCT++;
+        applyElo(winner==player.team);
         screen=S_END;
     }
 
@@ -568,18 +589,33 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         roundState=0; roundTimer=105; bombTimer=40; plantTimer=40;
         roundMessage=""; roundMessageT=0;
         particles.clear(); corpses.clear(); killFeed.clear();
-        bomb.state=0; bomb.carrier=player; bomb.defuseProgress=0;
-        player.resetForRound(world.tSpawns.get(0).x,world.tSpawns.get(0).y,(float)Math.PI/4);
-        player.team=Entities.TEAM_T;
+        bomb.state=0; bomb.defuseProgress=0;
+        // чередуем команды: нечётный раунд — Т, чётный — КТ
+        boolean playerT = (roundNo % 2 == 1);
+        player.team = playerT ? Entities.TEAM_T : Entities.TEAM_CT;
+        if (playerT) {
+            World.Spawn s=world.tSpawns.get(0);
+            player.resetForRound(s.x,s.y,(float)Math.PI/4);
+        } else {
+            World.Spawn s=world.cSpawns.get(0);
+            player.resetForRound(s.x,s.y,(float)Math.PI);
+        }
+        bomb.carrier = playerT ? player : null;
         int ti=0,ci=0;
-        for(Entities.Player b:bots){
-            if(b.team==Entities.TEAM_T){
+        for(int i=0;i<bots.size();i++){
+            Entities.Player b=bots.get(i);
+            // 4 бота в команде игрока, 5 в другой
+            boolean botT;
+            if (playerT) botT = (i<4); else botT = (i>=4);
+            b.team = botT ? Entities.TEAM_T : Entities.TEAM_CT;
+            if(botT){
                 World.Spawn s=world.tSpawns.get((ti++)%world.tSpawns.size());
                 b.resetForRound(s.x,s.y,(float)Math.PI/4);
             } else {
                 World.Spawn s=world.cSpawns.get((ci++)%world.cSpawns.size());
                 b.resetForRound(s.x,s.y,(float)Math.PI);
             }
+            b.name = botT ? "T-Bot" : "CT-Bot";
         }
         screen=S_GAME;
     }
