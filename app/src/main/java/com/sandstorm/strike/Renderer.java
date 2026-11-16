@@ -379,9 +379,9 @@ public final class Renderer {
     // ---- Kill effects (full-screen overlays) ------------------------------
     private void drawKillEffect(int effect, float t, float time) {
         float k = 1f - t; // 0..1 progress
+        int cx = W / 2, cy = H / 2;
         switch (effect % GameData.EFFECT_COUNT) {
             case 0: // black hole
-                int cx = W / 2, cy = H / 2;
                 int rMax = (int)(Math.max(W, H) * 0.55f);
                 int r = (int)(rMax * k);
                 drawRing(cx, cy, 0, Math.max(2, r), 0x000000);
