@@ -36,7 +36,14 @@ public class MainActivity extends Activity {
         } catch (Throwable t) {
             saveCrash(t);
             Toast.makeText(this, "Ошибка запуска: " + t, Toast.LENGTH_LONG).show();
-            throw t;
+            try {
+                android.widget.TextView tv = new android.widget.TextView(this);
+                tv.setText("Sandstorm Strike не смог запуститься.\n\n" + t + "\n\nЛог сохранён: Android/data/com.sandstorm.strike/files/sandstorm_crash.txt");
+                tv.setTextColor(0xFFFF5555);
+                tv.setTextSize(16);
+                tv.setPadding(40, 80, 40, 40);
+                setContentView(tv);
+            } catch (Throwable ignored2) {}
         }
     }
 
