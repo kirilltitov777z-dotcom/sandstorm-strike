@@ -77,7 +77,8 @@ public final class UI {
                 btn(v,c,0.10f,0.82f,0.20f,0.08f,"НАСТРОЙКИ",A_SETTINGS);
                 btn(v,c,0.70f,0.82f,0.20f,0.08f,"УПРАВЛЕНИЕ",A_HELP);
                 Paint t=p(0x7C8C99,Math.max(11,w*0.019f),false); t.setTextAlign(Paint.Align.CENTER);
-                c.drawText("ELO "+v.elo+(v.pendingElo!=0?"  (+"+v.pendingElo+" офлайн)":"")+"   •   "+v.wins+"W / "+v.losses+"L",w/2f,h*0.95f,t);
+                int lvl=1+Math.max(0,v.elo)/150;
+                c.drawText("Ур."+lvl+"   •   ELO "+v.elo+(v.pendingElo!=0?"  (+"+v.pendingElo+" офлайн)":"")+"   •   "+v.wins+"W / "+v.losses+"L",w/2f,h*0.95f,t);
                 break;
             }
             case GameView.S_PLAY: {
@@ -185,16 +186,16 @@ public final class UI {
                     float y=sy+wI*sh;
                     Paint nm=p(SAND,Math.max(13,w*0.026f),false);
                     c.drawText(GameData.WEAPON_NAMES[wI],w*0.06f,y+sh*0.3f,nm);
-                    for(int s=0;s<5;s++){
+                    for(int s=0;s<GameData.SKINS_PER_WEAPON;s++){
                         int col=GameData.SKIN_COLORS[wI][s];
                         Paint sw=new Paint(Paint.ANTI_ALIAS_FLAG);sw.setColor(col);
-                        float bx=w*(0.32f+s*0.12f),by=y;
-                        c.drawRoundRect(new RectF((int)bx,(int)by,(int)(bx+w*0.09f),(int)(by+sh*0.6f)),8,8,sw);
+                        float bx=w*(0.30f+s*0.085f),by=y;
+                        c.drawRoundRect(new RectF((int)bx,(int)by,(int)(bx+w*0.065f),(int)(by+sh*0.6f)),8,8,sw);
                         if(v.skinPerWeapon[wI]==s){
                             Paint sel=new Paint();sel.setColor(Color.WHITE);sel.setStyle(Paint.Style.STROKE);sel.setStrokeWidth(4);
-                            c.drawRoundRect(new RectF((int)bx,(int)by,(int)(bx+w*0.09f),(int)(by+sh*0.6f)),8,8,sel);
+                            c.drawRoundRect(new RectF((int)bx,(int)by,(int)(bx+w*0.065f),(int)(by+sh*0.6f)),8,8,sel);
                         }
-                        v.buttons.add(new GameView.Btn(bx,by,w*0.09f,sh*0.6f,A_SKIN_BASE+wI*5+s,""));
+                        v.buttons.add(new GameView.Btn(bx,by,w*0.065f,sh*0.6f,A_SKIN_BASE+wI*GameData.SKINS_PER_WEAPON+s,""));
                     }
                 }
                 btn(v,c,0.36f,0.93f,0.28f,0.06f,"НАЗАД",A_BACK);
@@ -271,7 +272,7 @@ public final class UI {
         Paint am=p(Color.WHITE,Math.max(22,w*0.042f),true);am.setTextAlign(Paint.Align.RIGHT);
         c.drawText(p.ammo[p.weapon]+" / "+p.reserve[p.weapon],w*0.98f,h*0.96f,am);
         Paint wn=p(GOLD,Math.max(13,w*0.025f),false);wn.setTextAlign(Paint.Align.RIGHT);
-        c.drawText(GameData.WEAPON_NAMES[p.weapon]+"  •  "+GameData.SKIN_NAMES[p.skin%5],w*0.98f,h*0.915f,wn);
+        c.drawText(GameData.WEAPON_NAMES[p.weapon]+"  •  "+GameData.SKIN_NAMES[p.skin%GameData.SKINS_PER_WEAPON],w*0.98f,h*0.915f,wn);
 
         // minimap
         drawMinimap(v,c,w,h);
@@ -393,9 +394,11 @@ public final class UI {
         for(GameView.Btn b:v.buttons){
             if(!b.contains(x,y)) continue;
             int a=b.action;
-            if(a>=A_SKIN_BASE && a<A_SKIN_BASE+25){
-                int idx=a-A_SKIN_BASE;v.skinPerWeapon[idx/5]=idx%5;
-                if(v.player!=null&&v.player.weapon==idx/5)v.player.skin=idx%5;
+            if(a>=A_SKIN_BASE && a<A_SKIN_BASE+5*GameData.SKINS_PER_WEAPON){
+                int idx=a-A_SKIN_BASE;
+                int wi=idx/GameData.SKINS_PER_WEAPON, sk=idx%GameData.SKINS_PER_WEAPON;
+                v.skinPerWeapon[wi]=sk;
+                if(v.player!=null&&v.player.weapon==wi)v.player.skin=sk;
                 v.savePrefs();return;
             }
             switch(a){

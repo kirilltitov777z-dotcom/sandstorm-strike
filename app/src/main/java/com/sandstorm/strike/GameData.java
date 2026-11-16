@@ -55,13 +55,14 @@ public final class GameData {
 
     // ---- Skins (color per weapon variant) ---------------------------------
     public static final int[][] SKIN_COLORS = {
-        {0xC9A227, 0xB0B7C0, 0x3A6EA5, 0x8E44AD, 0xC0392B}, // pistol
-        {0x2E8B57, 0xD4AC0D, 0xC0392B, 0x2980B9, 0x7F8C8D}, // smg
-        {0x8B4513, 0x2C3E50, 0x27AE60, 0x8E44AD, 0xD35400}, // rifle
-        {0x6B4226, 0x34495E, 0xD4AC0D, 0xC0392B, 0x1ABC9C}, // shotgun
-        {0x2C3E50, 0xD4AC0D, 0xC0392B, 0x2980B9, 0x27AE60}  // sniper
+        {0xC9A227, 0xB0B7C0, 0x3A6EA5, 0x8E44AD, 0xC0392B, 0x16A085, 0xE67E22, 0xECF0F1}, // pistol
+        {0x2E8B57, 0xD4AC0D, 0xC0392B, 0x2980B9, 0x7F8C8D, 0x8E44AD, 0x1ABC9C, 0xE74C3C}, // smg
+        {0x8B4513, 0x2C3E50, 0x27AE60, 0x8E44AD, 0xD35400, 0x2980B9, 0xD4AC0D, 0xECF0F1}, // rifle
+        {0x6B4226, 0x34495E, 0xD4AC0D, 0xC0392B, 0x1ABC9C, 0x8E44AD, 0xE67E22, 0xBDC3C7}, // shotgun
+        {0x2C3E50, 0xD4AC0D, 0xC0392B, 0x2980B9, 0x27AE60, 0x8E44AD, 0xE67E22, 0xECF0F1}  // sniper
     };
-    public static final String[] SKIN_NAMES = {"Sand", "Chrome", "Neon", "Royal", "Ember"};
+    public static final String[] SKIN_NAMES = {"Sand", "Chrome", "Neon", "Royal", "Ember", "Toxic", "Sunset", "Frost"};
+    public static final int SKINS_PER_WEAPON = 8;
 
     // ---- Kill effects -----------------------------------------------------
     public static final String[] EFFECT_NAMES = {

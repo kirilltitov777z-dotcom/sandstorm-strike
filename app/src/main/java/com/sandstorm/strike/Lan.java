@@ -2,6 +2,10 @@ package com.sandstorm.strike;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -68,7 +72,7 @@ public class Lan {
             placeAtSpawn(local);
             synchronized (players) { players.clear(); players.add(local); }
             server = new ServerSocket(PORT);
-            status = "Хост, порт " + PORT + ". Ждём игроков...";
+            status = "IP: " + localIp() + ":" + PORT + "  •  1/" + MAX_PLAYERS;
             acceptThread = new Thread(this::acceptLoop, "lan-accept");
             acceptThread.start();
             broadcastThread = new Thread(this::broadcastLoop, "lan-broadcast");
@@ -79,6 +83,20 @@ public class Lan {
             active = false; host = false;
             return false;
         }
+    }
+
+    private String localIp() {
+        try {
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (ni.isLoopback() || !ni.isUp()) continue;
+                for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+                    InetAddress a = ia.getAddress();
+                    if (a instanceof Inet4Address && !a.isLoopbackAddress())
+                        return a.getHostAddress();
+                }
+            }
+        } catch (Exception ignored) {}
+        return "192.168.x.x";
     }
 
     private void acceptLoop() {

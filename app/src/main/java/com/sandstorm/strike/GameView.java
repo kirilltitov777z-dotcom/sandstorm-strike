@@ -648,6 +648,7 @@ public class GameView extends View {
 
     void startMatch(int m) {
         mode=m;
+        if (m!=MODE_OFFLINE) difficulty = 1; // в онлайн/LAN сложность фиксированная
         if (m==MODE_ONLINE) syncElo();
         scoreT=0; scoreCT=0; roundNo=1;
         player=new Entities.Player(3.5f,18.5f,Entities.TEAM_T,false);

@@ -347,7 +347,7 @@ public final class Renderer {
     // ---- Viewmodel weapon -------------------------------------------------
     private void drawWeapon(Entities.Player p, float time) {
         int w = p.weapon;
-        int baseColor = GameData.SKIN_COLORS[w][p.skin % 5];
+        int baseColor = GameData.SKIN_COLORS[w][p.skin % GameData.SKINS_PER_WEAPON];
         float recoil = p.fireTimer > 0 ? p.fireTimer * 30f : 0f;
         float bobX = (float)Math.sin(p.bobPhase) * 6f * (p.bob / 100f);
         float bobY = (float)Math.abs(Math.cos(p.bobPhase)) * 5f * (p.bob / 100f);
