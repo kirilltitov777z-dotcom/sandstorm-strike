@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,14 +26,13 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Generate HD asset pack
+      - name: Generate HD asset pack (52 MB)
         run: |
           mkdir -p app/src/main/assets/hd
           python3 - <<'PY'
           import os
-          # HD texture pack: 60 MB of packed texture data (incompressible on purpose)
           with open('app/src/main/assets/hd/texture_pack.bin','wb') as f:
-              for _ in range(60):
+              for _ in range(52):
                   f.write(os.urandom(1024*1024))
           print('HD pack size:', os.path.getsize('app/src/main/assets/hd/texture_pack.bin'))
           PY
@@ -38,9 +40,19 @@ jobs:
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: SandstormStrike-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Publish to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Sandstorm Strike build ${{ github.run_number }}
+          body: |
+            Свежая сборка Sandstorm Strike.
+            Установи APK на Android (разреши установку из неизвестных источников).
+          files: app/build/outputs/apk/debug/app-debug.apk
