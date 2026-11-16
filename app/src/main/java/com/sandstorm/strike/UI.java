@@ -262,6 +262,12 @@ public final class UI {
 
         // crosshair
         drawCrosshair(v,c,w/2f,h/2f);
+        if(v.hitMarkerT>0){
+            Paint hm=new Paint(Paint.ANTI_ALIAS_FLAG);hm.setColor(0xFFFF4444);hm.setStrokeWidth(3);
+            float cx=w/2f,cy=h/2f,s=14;
+            c.drawLine(cx-s,cy-s,cx-4,cy-4,hm);c.drawLine(cx+s,cy-s,cx+4,cy-4,hm);
+            c.drawLine(cx-s,cy+s,cx-4,cy+4,hm);c.drawLine(cx+s,cy+s,cx+4,cy+4,hm);
+        }
 
         // health / armor
         Paint hp=p(p.health>30?0x7FD8A0:0xE86A5A,Math.max(18,w*0.035f),true);

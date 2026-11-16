@@ -64,6 +64,7 @@ public class GameView extends View {
     float matchTime = 0;
 
     int killEffect = 0; float killEffectT = 0;
+    float hitMarkerT = 0;
     final List<String> killFeed = new ArrayList<>();
     final List<Btn> buttons = new ArrayList<>();
 
@@ -202,6 +203,7 @@ public class GameView extends View {
     // ================= GAME LOGIC =================
     void update(float dt) {
         matchTime += dt;
+        if (hitMarkerT > 0) hitMarkerT -= dt;
         if (killEffectT > 0) killEffectT -= dt * 1.6f;
         if (roundMessageT > 0) roundMessageT -= dt;
         if (endTimer > 0) { endTimer -= dt; if (endTimer <= 0) screen = S_MENU; }
@@ -351,6 +353,7 @@ public class GameView extends View {
             target.armor -= absorb; d -= absorb;
         }
         target.health -= d;
+        if (attacker != null && attacker == player && target != player) hitMarkerT = 0.12f;
         if (target.health <= 0) {
             target.health = 0; target.alive = false; target.deaths++;
             if (!target.isBot) { roundMessage = "Ты погиб"; roundMessageT = 2; }
@@ -641,8 +644,14 @@ public class GameView extends View {
                 World.Spawn s=world.cSpawns.get((ci++)%world.cSpawns.size());
                 b.resetForRound(s.x,s.y,(float)Math.PI);
             }
+            b.weapon = RND.nextInt(5);
+            b.skin = RND.nextInt(GameData.SKINS_PER_WEAPON);
+            b.ammo[b.weapon] = GameData.WEAPON_MAG[b.weapon];
+            b.reserve[b.weapon] = GameData.WEAPON_RESERVE[b.weapon];
             b.name = botT ? "T-Bot" : "CT-Bot";
         }
+        roundMessage = "РАУНД " + roundNo;
+        roundMessageT = 1.5f;
         screen=S_GAME;
     }
 
