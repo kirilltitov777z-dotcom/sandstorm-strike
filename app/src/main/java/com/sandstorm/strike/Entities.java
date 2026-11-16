@@ -62,6 +62,8 @@ public final class Entities {
         public Player carrier;
         public int site; // 0 A 1 B
         public float defuseProgress;
+        public Bomb() {}
+        public Bomb(float x, float y, int state) { this.x=x; this.y=y; this.state=state; }
     }
 
     public static class Pickup {
@@ -82,5 +84,7 @@ public final class Entities {
     public static class Corpse {
         public float x, y, dir;
         public float life = 14f;
+        public Corpse() {}
+        public Corpse(float x, float y, float dir) { this.x=x; this.y=y; this.dir=dir; }
     }
 }

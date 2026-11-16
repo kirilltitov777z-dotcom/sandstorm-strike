@@ -95,7 +95,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         loadPrefs();
         world = new World();
         setFocusable(true);
-        setOnTouchEvent((v, e) -> handleTouch(e));
+        setOnTouchListener((v, e) -> handleTouch(e));
     }
 
     void loadPrefs() {
@@ -158,7 +158,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     void applyQuality() {
-        int[] res = {{240,135},{360,203},{480,270}};
+        int[][] res = {{240,135},{360,203},{480,270}};
         int q = Math.max(0, Math.min(2, quality));
         renderer.resize(res[q][0], res[q][1]);
     }
@@ -321,7 +321,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (!target.alive) return;
         int d = dmg;
         if (target.armor > 0) {
-            int absorb = Math.min(target.armor, (int)(d * 0.5f));
+            int absorb = (int)Math.min(target.armor, d * 0.5f);
             target.armor -= absorb; d -= absorb;
         }
         target.health -= d;
@@ -574,10 +574,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         int ti=0,ci=0;
         for(Entities.Player b:bots){
             if(b.team==Entities.TEAM_T){
-                World.Site s=world.tSpawns.get((ti++)%world.tSpawns.size());
+                World.Spawn s=world.tSpawns.get((ti++)%world.tSpawns.size());
                 b.resetForRound(s.x,s.y,(float)Math.PI/4);
             } else {
-                World.Site s=world.cSpawns.get((ci++)%world.cSpawns.size());
+                World.Spawn s=world.cSpawns.get((ci++)%world.cSpawns.size());
                 b.resetForRound(s.x,s.y,(float)Math.PI);
             }
         }

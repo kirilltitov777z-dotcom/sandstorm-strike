@@ -184,7 +184,7 @@ public final class Renderer {
 
         // corpses
         for (Entities.Corpse c : corpses) {
-            drawBillboard(c.x, c.y, invDet, horizon, 0.35f, 0.5f, 0, c.dir, 1f);
+            drawBillboard(c.x, c.y, invDet, horizon, 0.35f, 0.5f, 0, 0, 1f);
         }
         // pickups
         for (Entities.Pickup pk : pickups) {

@@ -3,7 +3,7 @@ package com.sandstorm.strike;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.RectF;
 
 /** All 2D UI: menus, HUD, touch controls, click routing. */
 public final class UI {
@@ -38,9 +38,9 @@ public final class UI {
         float x=rx*v.viewW,y=ry*v.viewH,w=rw*v.viewW,h=rh*v.viewH;
         v.buttons.add(new GameView.Btn(x,y,w,h,action,label));
         Paint fill=new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(0x22303C);
-        c.drawRoundRect(new Rect((int)x,(int)y,(int)(x+w),(int)(y+h)),10,10,fill);
+        c.drawRoundRect(new RectF((int)x,(int)y,(int)(x+w),(int)(y+h)),10,10,fill);
         Paint border=new Paint(Paint.ANTI_ALIAS_FLAG); border.setColor(GOLD); border.setStyle(Paint.Style.STROKE); border.setStrokeWidth(2);
-        c.drawRoundRect(new Rect((int)x,(int)y,(int)(x+w),(int)(y+h)),10,10,border);
+        c.drawRoundRect(new RectF((int)x,(int)y,(int)(x+w),(int)(y+h)),10,10,border);
         Paint t=p(SAND,Math.max(15,h*0.42f),true);
         t.setTextAlign(Paint.Align.CENTER);
         c.drawText(label,x+w/2,y+h/2+h*0.15f,t);
@@ -182,10 +182,10 @@ public final class UI {
                         int col=GameData.SKIN_COLORS[wI][s];
                         Paint sw=new Paint(Paint.ANTI_ALIAS_FLAG);sw.setColor(col);
                         float bx=w*(0.32f+s*0.12f),by=y;
-                        c.drawRoundRect(new Rect((int)bx,(int)by,(int)(bx+w*0.09f),(int)(by+sh*0.6f)),8,8,sw);
+                        c.drawRoundRect(new RectF((int)bx,(int)by,(int)(bx+w*0.09f),(int)(by+sh*0.6f)),8,8,sw);
                         if(v.skinPerWeapon[wI]==s){
                             Paint sel=new Paint();sel.setColor(Color.WHITE);sel.setStyle(Paint.Style.STROKE);sel.setStrokeWidth(4);
-                            c.drawRoundRect(new Rect((int)bx,(int)by,(int)(bx+w*0.09f),(int)(by+sh*0.6f)),8,8,sel);
+                            c.drawRoundRect(new RectF((int)bx,(int)by,(int)(bx+w*0.09f),(int)(by+sh*0.6f)),8,8,sel);
                         }
                         v.buttons.add(new GameView.Btn(bx,by,w*0.09f,sh*0.6f,A_SKIN_BASE+wI*5+s,""));
                     }
@@ -326,9 +326,9 @@ public final class UI {
         float x=rx*v.viewW,y=ry*v.viewH,w=rw*v.viewW,h=rh*v.viewH;
         v.buttons.add(new GameView.Btn(x,y,w,h,action,label));
         Paint q=new Paint(Paint.ANTI_ALIAS_FLAG);q.setColor(color);
-        c.drawRoundRect(new Rect((int)x,(int)y,(int)(x+w),(int)(y+h)),12,12,q);
+        c.drawRoundRect(new RectF((int)x,(int)y,(int)(x+w),(int)(y+h)),12,12,q);
         Paint b=new Paint(Paint.ANTI_ALIAS_FLAG);b.setColor(0x88FFFFFF);b.setStyle(Paint.Style.STROKE);b.setStrokeWidth(2);
-        c.drawRoundRect(new Rect((int)x,(int)y,(int)(x+w),(int)(y+h)),12,12,b);
+        c.drawRoundRect(new RectF((int)x,(int)y,(int)(x+w),(int)(y+h)),12,12,b);
         Paint t=p(Color.WHITE,Math.max(11,h*0.30f),true);t.setTextAlign(Paint.Align.CENTER);
         c.drawText(label,x+w/2,y+h/2+h*0.12f,t);
     }
