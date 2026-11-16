@@ -321,7 +321,7 @@ public final class UI {
         // scoreboard
         java.util.List<Entities.Player> all=new java.util.ArrayList<>();
         if(v.lan!=null){ synchronized(v.lan.players){ all.addAll(v.lan.players);} }
-        all.sort((a,b)->Integer.compare(b.kills,a.kills));
+        java.util.Collections.sort(all, (a,b)->Integer.compare(b.kills,a.kills));
         Paint sb=p(0xD0DAE2,Math.max(11,w*0.019f),false);sb.setTextAlign(Paint.Align.RIGHT);
         for(int i=0;i<Math.min(6,all.size());i++){
             Entities.Player q=all.get(i);
