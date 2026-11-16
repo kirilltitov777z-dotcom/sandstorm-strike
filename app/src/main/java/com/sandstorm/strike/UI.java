@@ -12,7 +12,7 @@ public final class UI {
             A_OFFLINE=8,A_ONLINE=9,A_LAN=10,A_STARTLAN=11,A_NEXTROUND=12,
             A_SENS_MINUS=20,A_SENS_PLUS=21,A_CROSS=22,A_CROSSCOLOR=23,
             A_CROSSSIZE_MINUS=24,A_CROSSSIZE_PLUS=25,A_BHOP=26,A_BHOPMULT=27,
-            A_INVERT=28,A_QUALITY=29,A_EFFECT=30,A_FPS=31,A_SKY=32,A_SKIN_BASE=100,
+            A_INVERT=28,A_QUALITY=29,A_EFFECT=30,A_FPS=31,A_SKY=32,A_DIFF=33,A_SKIN_BASE=100,
             A_CLAN_CYCLE=200,A_SYNC=201;
 
     static final int G_FIRE=500,G_JUMP=501,G_CROUCH=502,G_RELOAD=503,
@@ -110,19 +110,20 @@ public final class UI {
                 Paint t=p(GOLD,Math.max(22,w*0.05f),true);t.setTextAlign(Paint.Align.CENTER);
                 c.drawText("НАСТРОЙКИ",w/2f,h*0.09f,t);
                 int[] rows={A_SENS_MINUS,A_CROSS,A_CROSSCOLOR,A_CROSSSIZE_MINUS,A_BHOP,
-                            A_BHOPMULT,A_INVERT,A_QUALITY,A_EFFECT,A_FPS};
+                            A_BHOPMULT,A_INVERT,A_QUALITY,A_EFFECT,A_FPS,A_DIFF};
                 String[] names={
                     "Чувствительность","Прицел (стиль)","Цвет прицела","Размер прицела",
-                    "Баннихоп","Множитель БХ","Инверт Y","Графика","Эффект убийства","Показ FPS"
+                    "Баннихоп","Множитель БХ","Инверт Y","Графика","Эффект убийства","Показ FPS","Сложность ботов"
                 };
                 String[] vals={
                     String.format("%.2f",v.sensitivity), String.valueOf(v.crosshairStyle),
                     String.format("#%06X",v.crosshairColor&0xFFFFFF), String.valueOf(v.crosshairSize),
                     v.bhopEnabled?"ВКЛ":"ВЫКЛ", "x"+String.format("%.1f",v.bhopMult),
                     v.invertY?"ДА":"НЕТ", new String[]{"НИЗК","СРЕД","ВЫСОК"}[v.quality],
-                    GameData.EFFECT_NAMES[v.effect%GameData.EFFECT_COUNT], v.showFps?"ДА":"НЕТ"
+                    GameData.EFFECT_NAMES[v.effect%GameData.EFFECT_COUNT], v.showFps?"ДА":"НЕТ",
+                    new String[]{"ЛЁГКИЕ","СРЕДНИЕ+","ХАРД"}[v.difficulty]
                 };
-                float sy=h*0.14f, sh=h*0.068f;
+                float sy=h*0.14f, sh=h*0.062f;
                 for(int i=0;i<rows.length;i++){
                     float y=sy+i*sh;
                     Paint nm=p(SAND,Math.max(12,w*0.024f),false);
@@ -132,8 +133,8 @@ public final class UI {
                     btn(v,c,0.72f,y/h,0.11f,sh/h*0.8f,"<",rows[i]+1000);
                     btn(v,c,0.85f,y/h,0.11f,sh/h*0.8f,">",rows[i]);
                 }
-                btn(v,c,0.30f,0.845f,0.40f,0.055f,"НЕБО СВОЁ ФОТО",A_SKY);
-                btn(v,c,0.36f,0.915f,0.28f,0.055f,"НАЗАД",A_BACK);
+                btn(v,c,0.30f,0.835f,0.40f,0.05f,"НЕБО СВОЁ ФОТО",A_SKY);
+                btn(v,c,0.36f,0.90f,0.28f,0.055f,"НАЗАД",A_BACK);
                 break;
             }
             case GameView.S_ELO: {
@@ -400,6 +401,7 @@ public final class UI {
                 case A_QUALITY+1000: case A_QUALITY: v.quality=(v.quality+(a==A_QUALITY?1:2))%3;v.applyQuality();v.savePrefs();break;
                 case A_EFFECT+1000: case A_EFFECT: v.effect=(v.effect+(a==A_EFFECT?1:GameData.EFFECT_COUNT-1))%GameData.EFFECT_COUNT;v.savePrefs();break;
                 case A_FPS+1000: case A_FPS: v.showFps=!v.showFps;v.savePrefs();break;
+                case A_DIFF+1000: case A_DIFF: v.difficulty=(v.difficulty+(a==A_DIFF?1:2))%3;v.savePrefs();break;
             }
             return;
         }

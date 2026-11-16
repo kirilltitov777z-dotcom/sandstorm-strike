@@ -115,6 +115,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 invertY = Boolean.parseBoolean(p[6]); quality = Integer.parseInt(p[7]);
                 effect = Integer.parseInt(p[8]); showFps = Boolean.parseBoolean(p[9]);
                 masterVolume = Float.parseFloat(p[10]);
+                if (p.length > 11) difficulty = Integer.parseInt(p[11]);
             } catch (Exception ignored) {}
         }
         for (int i = 0; i < 5; i++) skinPerWeapon[i] = prefs.getInt(GameData.K_SKIN + i, 0);
@@ -127,7 +128,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         e.putInt(GameData.K_KILLS, totalKills); e.putString(GameData.K_CLAN, clanName);
         String s = sensitivity + ";" + crosshairStyle + ";" + crosshairColor + ";" + crosshairSize + ";"
                 + bhopEnabled + ";" + bhopMult + ";" + invertY + ";" + quality + ";"
-                + effect + ";" + showFps + ";" + masterVolume;
+                + effect + ";" + showFps + ";" + masterVolume + ";" + difficulty;
         e.putString(GameData.K_SETTINGS, s);
         for (int i = 0; i < 5; i++) e.putInt(GameData.K_SKIN + i, skinPerWeapon[i]);
         e.apply();
