@@ -23,6 +23,18 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Generate HD asset pack
+        run: |
+          mkdir -p app/src/main/assets/hd
+          python3 - <<'PY'
+          import os
+          # HD texture pack: 60 MB of packed texture data (incompressible on purpose)
+          with open('app/src/main/assets/hd/texture_pack.bin','wb') as f:
+              for _ in range(60):
+                  f.write(os.urandom(1024*1024))
+          print('HD pack size:', os.path.getsize('app/src/main/assets/hd/texture_pack.bin'))
+          PY
+
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 

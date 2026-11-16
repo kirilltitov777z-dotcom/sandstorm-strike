@@ -11,8 +11,10 @@
 
     <application
         android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
         android:label="Sandstorm Strike"
         android:theme="@style/GameTheme"
+        android:hardwareAccelerated="true"
         android:usesCleartextTraffic="true">
 
         <activity

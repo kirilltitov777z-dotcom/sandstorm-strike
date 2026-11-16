@@ -25,6 +25,8 @@ public final class Entities {
         public String name = "Player";
         public float speedBoost = 1f;
         public boolean crouching;
+        public int id = -1;
+        public float respawnTimer = 0f;
         // bot AI
         public int aiState; // 0 patrol 1 chase 2 attack
         public float aiThink, aiStrafe;

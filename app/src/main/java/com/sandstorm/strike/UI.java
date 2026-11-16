@@ -12,7 +12,8 @@ public final class UI {
             A_OFFLINE=8,A_ONLINE=9,A_LAN=10,A_STARTLAN=11,A_NEXTROUND=12,
             A_SENS_MINUS=20,A_SENS_PLUS=21,A_CROSS=22,A_CROSSCOLOR=23,
             A_CROSSSIZE_MINUS=24,A_CROSSSIZE_PLUS=25,A_BHOP=26,A_BHOPMULT=27,
-            A_INVERT=28,A_QUALITY=29,A_EFFECT=30,A_FPS=31,A_SKY=32,A_DIFF=33,A_SKIN_BASE=100,
+            A_INVERT=28,A_QUALITY=29,A_EFFECT=30,A_FPS=31,A_SKY=32,A_DIFF=33,
+            A_LAN_HOST=34,A_LAN_JOIN=35,A_SKIN_BASE=100,
             A_CLAN_CYCLE=200,A_SYNC=201;
 
     static final int G_FIRE=500,G_JUMP=501,G_CROUCH=502,G_RELOAD=503,
@@ -93,17 +94,22 @@ public final class UI {
                 c.drawText("LAN — ЛОКАЛЬНАЯ СЕТЬ",w/2f,h*0.16f,t);
                 Paint b=p(SAND,Math.max(13,w*0.025f),false);
                 String[] lines={
-                    "До 10 игроков, один хост с интернетом.",
-                    "Подключитесь к одной Wi-Fi сети.",
-                    "Хост создаёт комнату, остальные входят.",
-                    "Режим для игры с друзьями рядом."
+                    "До 10 игроков. Один хост, остальные входят по IP.",
+                    "Все устройства в одной Wi-Fi сети.",
+                    "Хост создаёт комнату и видит свой IP.",
+                    "Формат: deathmatch с респавном."
                 };
                 for(int i=0;i<lines.length;i++){
                     b.setTextAlign(Paint.Align.CENTER);
-                    c.drawText(lines[i],w/2f,h*0.28f+i*h*0.055f,b);
+                    c.drawText(lines[i],w/2f,h*0.27f+i*h*0.05f,b);
                 }
-                btn(v,c,0.32f,0.60f,0.36f,0.10f,"СОЗДАТЬ КОМНАТУ",A_STARTLAN);
-                btn(v,c,0.32f,0.78f,0.36f,0.08f,"НАЗАД",A_BACK);
+                if(v.lan!=null){
+                    Paint st=p(0x7FD8A0,Math.max(12,w*0.024f),false);st.setTextAlign(Paint.Align.CENTER);
+                    c.drawText(v.lan.status,w/2f,h*0.50f,st);
+                }
+                btn(v,c,0.30f,0.56f,0.40f,0.09f,"СОЗДАТЬ КОМНАТУ (ХОСТ)",A_LAN_HOST);
+                btn(v,c,0.30f,0.68f,0.40f,0.09f,"ВОЙТИ ПО IP",A_LAN_JOIN);
+                btn(v,c,0.32f,0.82f,0.36f,0.07f,"НАЗАД",A_BACK);
                 break;
             }
             case GameView.S_SETTINGS: {
@@ -287,6 +293,37 @@ public final class UI {
         if(v.showFps){ Paint f=p(0x88FF88,Math.max(11,w*0.02f),false); c.drawText("FPS "+Math.round(v.fps),w*0.02f,h*0.12f,f); }
     }
 
+    public static void drawLanHUD(GameView v,Canvas c,int w,int h){
+        v.buttons.clear();
+        Entities.Player p=v.player;
+        if(p==null) return;
+        // top bar
+        Paint bar=new Paint();bar.setColor(0x900B1016);c.drawRect(0,0,w,h*0.075f,bar);
+        Paint lanT=p(0x7FD8A0,Math.max(14,w*0.027f),true);
+        c.drawText("LAN  "+(v.lan!=null?v.lan.status:""),w*0.02f,h*0.048f,lanT);
+        Paint cnt=p(GOLD,Math.max(14,w*0.027f),true);cnt.setTextAlign(Paint.Align.RIGHT);
+        c.drawText("Игроков: "+(v.lan!=null?v.lan.playerCount():0),w*0.98f,h*0.048f,cnt);
+        // crosshair
+        drawCrosshair(v,c,w/2f,h/2f);
+        // health
+        Paint hp=p(p.health>30?0x7FD8A0:0xE86A5A,Math.max(20,w*0.038f),true);
+        c.drawText("♥ "+Math.round(p.health),w*0.02f,h*0.96f,hp);
+        // weapon
+        Paint wn=p(GOLD,Math.max(13,w*0.025f),false);wn.setTextAlign(Paint.Align.RIGHT);
+        c.drawText(GameData.WEAPON_NAMES[p.weapon],w*0.98f,h*0.93f,wn);
+        // scoreboard
+        java.util.List<Entities.Player> all=new java.util.ArrayList<>();
+        if(v.lan!=null){ synchronized(v.lan.players){ all.addAll(v.lan.players);} }
+        all.sort((a,b)->Integer.compare(b.kills,a.kills));
+        Paint sb=p(0xD0DAE2,Math.max(11,w*0.019f),false);sb.setTextAlign(Paint.Align.RIGHT);
+        for(int i=0;i<Math.min(6,all.size());i++){
+            Entities.Player q=all.get(i);
+            sb.setColor(q.id==p.id?GOLD:0xD0DAE2);
+            c.drawText((i+1)+". "+q.name+"  "+q.kills,w*0.98f,h*0.13f+i*h*0.035f,sb);
+        }
+        drawTouchControls(v,c,w,h);
+    }
+
     private static void drawCrosshair(GameView v,Canvas c,float cx,float cy){
         Paint q=new Paint(Paint.ANTI_ALIAS_FLAG);q.setColor(v.crosshairColor);q.setStrokeWidth(2);
         int s=v.crosshairSize;
@@ -372,7 +409,10 @@ public final class UI {
                 case A_OFFLINE: v.startMatch(GameView.MODE_OFFLINE);break;
                 case A_ONLINE: v.startMatch(GameView.MODE_ONLINE);break;
                 case A_LAN: v.screen=GameView.S_LAN;break;
-                case A_STARTLAN: v.startMatch(GameView.MODE_LAN);break;
+                case A_LAN_HOST: v.startLanHost();break;
+                case A_LAN_JOIN:
+                    if(v.getContext() instanceof MainActivity) ((MainActivity)v.getContext()).promptIp();
+                    break;
                 case A_NEXTROUND: v.nextRound();break;
                 case A_SYNC: v.syncElo();break;
                 case A_SKY: if(v.getContext() instanceof MainActivity) ((MainActivity)v.getContext()).pickSky();break;
@@ -421,7 +461,7 @@ public final class UI {
                     v.player.skin=v.skinPerWeapon[v.player.weapon];
                     return true;
                 }
-                case G_PAUSE: v.screen=GameView.S_MENU;v.firing=false;return true;
+                case G_PAUSE: v.leaveLan(); v.screen=GameView.S_MENU;v.firing=false;return true;
             }
         }
         return false;

@@ -11,25 +11,22 @@ import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.View;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class GameView extends SurfaceView implements SurfaceHolder.Callback {
+public class GameView extends View {
 
     // screens
     static final int S_MENU=0, S_PLAY=1, S_SETTINGS=2, S_ELO=3, S_CLAN=4, S_SKINS=5, S_GAME=6, S_END=7, S_LAN=8, S_HELP=9;
     static final int MODE_OFFLINE=0, MODE_ONLINE=1, MODE_LAN=2;
 
-    SurfaceHolder holder;
-    Thread thread;
     volatile boolean running = true;
+    public String lastError = "";
     Renderer renderer;
     World world;
     SharedPreferences prefs;
@@ -48,6 +45,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     int elo = 1000, pendingElo = 0, wins = 0, losses = 0, totalKills = 0;
     String clanName = "";
     int[] skinPerWeapon = new int[5];
+
+    Lan lan;
+    volatile boolean lanActive = false;
 
     Entities.Player player;
     final List<Entities.Player> bots = new ArrayList<>();
@@ -89,13 +89,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public GameView(Context c, AttributeSet a) {
         super(c, a);
-        holder = getHolder(); holder.addCallback(this);
         prefs = c.getSharedPreferences(GameData.PREFS, Context.MODE_PRIVATE);
         renderer = new Renderer(320, 180);
         loadPrefs();
         world = new World();
         setFocusable(true);
-        setOnTouchListener((v, e) -> handleTouch(e));
+        setFocusableInTouchMode(true);
     }
 
     void loadPrefs() {
@@ -144,38 +143,60 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    // ---- surface ----
-    @Override public void surfaceCreated(SurfaceHolder h) {
-        running = true;
-        thread = new Thread(this::loop);
-        thread.start();
-    }
-    @Override public void surfaceChanged(SurfaceHolder h, int f, int w, int ht) {
-        viewW = w; viewH = ht; applyQuality();
-    }
-    @Override public void surfaceDestroyed(SurfaceHolder h) {
-        running = false;
-        try { thread.join(1000); } catch (Exception ignored) {}
+    // ---- view lifecycle ----
+    @Override protected void onSizeChanged(int w, int h, int ow, int oh) {
+        super.onSizeChanged(w, h, ow, oh);
+        if (w > 0 && h > 0) { viewW = w; viewH = h; applyQuality(); }
     }
 
     void applyQuality() {
         int[][] res = {{240,135},{360,203},{480,270}};
-        int q = Math.max(0, Math.min(2, quality));
+        int q = Math.max(0, Math.min(2, Math.max(0, Math.min(2, quality))));
         renderer.resize(res[q][0], res[q][1]);
     }
 
-    void loop() {
-        while (running) {
-            long now = System.nanoTime();
-            float dt = lastFrame == 0 ? 0.016f : (now - lastFrame) / 1e9f;
-            lastFrame = now;
-            if (dt > 0.1f) dt = 0.1f;
-            fps = fps * 0.92f + (1f / Math.max(0.001f, dt)) * 0.08f;
-            try {
-                update(dt);
-                draw();
-            } catch (Exception e) { e.printStackTrace(); }
+    @Override protected void onDraw(Canvas c) {
+        long now = System.nanoTime();
+        float dt = lastFrame == 0 ? 0.016f : (now - lastFrame) / 1e9f;
+        lastFrame = now;
+        if (dt > 0.1f) dt = 0.1f;
+        if (dt > 0.001f) fps = fps * 0.92f + (1f / dt) * 0.08f;
+        try {
+            update(dt);
+            if (lanActive && lan != null && screen == S_GAME) {
+                Entities.Player me = lan.myPlayer();
+                player = me;
+                java.util.List<Entities.Player> others = lan.others(me);
+                renderer.render(me, world, others, null,
+                        java.util.Collections.<Entities.Pickup>emptyList(),
+                        lan.particles, lan.corpses, matchTime, killEffect, killEffectT, quality);
+                c.drawBitmap(renderer.bitmap, null,
+                        new android.graphics.Rect(0, 0, viewW, viewH), paint);
+                UI.drawLanHUD(this, c, viewW, viewH);
+            } else if (screen == S_GAME || screen == S_END) {
+                renderer.render(player, world, bots, bomb, pickups, particles, corpses,
+                        matchTime, killEffect, killEffectT, quality);
+                c.drawBitmap(renderer.bitmap, null,
+                        new android.graphics.Rect(0, 0, viewW, viewH), paint);
+                UI.drawHUD(this, c, viewW, viewH);
+            } else {
+                UI.drawMenu(this, c, viewW, viewH);
+            }
+            lastError = "";
+        } catch (Throwable t) {
+            lastError = t.toString();
+            c.drawColor(0xFF101820);
+            Paint ep = new Paint(Paint.ANTI_ALIAS_FLAG);
+            ep.setColor(0xFFFF5555); ep.setTextSize(28);
+            c.drawText("Ошибка: " + lastError, 30, 60, ep);
+            ep.setTextSize(18);
+            c.drawText("Открой Загрузки/sandstorm_crash.txt и отправь разработчику", 30, 100, ep);
         }
+        if (running) postInvalidateOnAnimation();
+    }
+
+    @Override public boolean onTouchEvent(MotionEvent e) {
+        return handleTouch(e);
     }
 
     // ================= GAME LOGIC =================
@@ -185,6 +206,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (roundMessageT > 0) roundMessageT -= dt;
         if (endTimer > 0) { endTimer -= dt; if (endTimer <= 0) screen = S_MENU; }
 
+        if (lanActive && lan != null) {
+            if (screen == S_GAME) lan.update(this, dt);
+            return;
+        }
         if (screen != S_GAME) return;
         if (roundState == 2) return;
 
@@ -641,21 +666,30 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         nextRound(); screen=S_GAME;
     }
 
-    // ================= DRAW =================
-    void draw() {
-        SurfaceHolder h=holder;
-        Canvas c=null;
-        try { c=h.lockCanvas(); } catch(Exception e){ return; }
-        if (c==null) return;
-        try {
-            if (screen==S_GAME || screen==S_END) {
-                renderer.render(player,world,bots,bomb,pickups,particles,corpses,matchTime,killEffect,killEffectT,quality);
-                c.drawBitmap(renderer.bitmap,null,new android.graphics.Rect(0,0,viewW,viewH),paint);
-                UI.drawHUD(this,c,viewW,viewH);
-            } else {
-                UI.drawMenu(this,c,viewW,viewH);
-            }
-        } finally { h.unlockCanvasAndPost(c); }
+    public boolean startLanHost() {
+        leaveLan();
+        lan = new Lan(world);
+        if (!lan.startHost("Host")) { lan=null; return false; }
+        lanActive = true; screen = S_GAME;
+        player = lan.local;
+        joyX=0;joyY=0;firing=false;wantJump=false;wantCrouch=false;wantReload=false;wantPlant=false;
+        return true;
+    }
+
+    public boolean startLanJoin(String ip) {
+        leaveLan();
+        lan = new Lan(world);
+        if (!lan.startClient(ip, "Player")) { lan=null; return false; }
+        lanActive = true; screen = S_GAME;
+        player = lan.local;
+        joyX=0;joyY=0;firing=false;wantJump=false;wantCrouch=false;wantReload=false;wantPlant=false;
+        return true;
+    }
+
+    public void leaveLan() {
+        if (lan != null) lan.stop();
+        lan = null;
+        lanActive = false;
     }
 
     // ================= INPUT =================
